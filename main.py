@@ -10,11 +10,11 @@ from fastapi import FastAPI, Request
 # =========================
 # CONFIG (PUT INSIDE FILE)
 # =========================
-BOT_TOKEN = "8585926679:AAFT_CWzHMm7YQif0xeaDweYQcbXN6XwMjc"
-DATABASE_URL = "postgresql://postgres.nuxdkcfngtmbdrracmtu:RadheyRadhe@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"  # Supabase Postgres connection string
-ADMIN_IDS = {8537079657}  # add more admins: {111,222,333}
+BOT_TOKEN = "8455750320:AAHB5NrVyKH_fTR7AFr4hZCadyK-O0k8Jxk"
+DATABASE_URL = "postgresql://postgres.dmwkpbyynjngjlpuyfog:RadheyRadhe@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres"  # Supabase Postgres connection string
+ADMIN_IDS = {8135256584}  # add more admins: {111,222,333}
 
-MIN_DEPOSIT = 30
+MIN_DEPOSIT = 10
 COUPON_TYPES = ["500", "1K", "2K", "4K"]
 
 TG = f"https://api.telegram.org/bot{BOT_TOKEN}"
