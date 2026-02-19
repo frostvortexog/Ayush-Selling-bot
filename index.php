@@ -584,7 +584,160 @@ if ($message) {
                   ["text"=>"✅ Accept", "callback_data"=>"dep_approve:{$d['id']}"],
                   ["text"=>"❌ Decline", "callback_data"=>"dep_decline:{$d['id']}"],
                 ]
-               ]
+              ]
+            ], JSON_UNESCAPED_UNICODE)
+          ]);
+        } else {
+          bot("sendMessage", [
+            "chat_id"=>$tg_id,
+            "text"=>$cap,
+            "reply_markup"=>json_encode([
+              "inline_keyboard"=>[
+                [
+                  ["text"=>"✅ Accept", "callback_data"=>"dep_approve:{$d['id']}"],
+                  ["text"=>"❌ Decline", "callback_data"=>"dep_decline:{$d['id']}"],
+                ]
+              ]
+            ], JSON_UNESCAPED_UNICODE)
+          ]);
+        }
+      }
+      http_response_code(200); echo "OK"; exit;
+    }
+  }
+
+  // ================= STATE FLOWS =================
+
+  // Enter diamonds for deposit
+  if ($state === "dep_enter_diamonds" && $text !== null) {
+    $method = $temp["method"] ?? "";
+    $diamonds = (int)trim($text);
+
+    if ($diamonds < (int)$GLOBALS["MIN_DIAMONDS"]) {
+      bot("sendMessage", ["chat_id"=>$tg_id, "text"=>"❌ Minimum is {$GLOBALS['MIN_DIAMONDS']} diamonds. Send again:"]);
+      http_response_code(200); echo "OK"; exit;
+    }
+
+    // Save diamonds in temp
+    set_state($tg_id, "dep_summary", ["method"=>$method, "diamonds"=>$diamonds]);
+
+    $time = now_text();
+    $summary =
+      "📝 Order Summary:\n━━━━━━━━━━━━━━━\n"
+      . "{$GLOBALS['RATE_TEXT']}\n"
+      . "💵 Amount: {$diamonds}\n"
+      . "💎 Diamonds to Receive: {$diamonds} 💎\n"
+      . "💳 Method: " . ($method === "amazon" ? "Amazon Gift Card" : "UPI") . "\n"
+      . "📅 Time: {$time}\n"
+      . "━━━━━━━━━━━━━━━\n\n"
+      . "Click below to proceed.";
+
+    bot("sendMessage", [
+      "chat_id"=>$tg_id,
+      "text"=>$summary,
+      "reply_markup"=>json_encode([
+        "inline_keyboard"=>[
+          [["text"=>($method==="amazon" ? "📤 Submit a Gift Card" : "📤 Submit UPI Payment"), "callback_data"=>"dep_submit:{$method}"]],
+        ]
+      ], JSON_UNESCAPED_UNICODE)
+    ]);
+
+    http_response_code(200); echo "OK"; exit;
+  }
+
+  // Amazon: enter gift card amount
+  if ($state === "dep_amazon_amount" && $text !== null) {
+    $diamonds = (int)($temp["diamonds"] ?? 0);
+    $amount = (int)trim($text);
+    if ($amount <= 0) {
+      bot("sendMessage", ["chat_id"=>$tg_id, "text"=>"❌ Please send a valid amount number."]);
+      http_response_code(200); echo "OK"; exit;
+    }
+    set_state($tg_id, "dep_amazon_screenshot", ["method"=>"amazon", "diamonds"=>$diamonds, "amount"=>$amount]);
+    bot("sendMessage", ["chat_id"=>$tg_id, "text"=>"📸 Now upload a screenshot of the gift card:"]);
+    http_response_code(200); echo "OK"; exit;
+  }
+
+  // Amazon: screenshot
+  if ($state === "dep_amazon_screenshot" && $photo) {
+    $file_id = end($photo)["file_id"];
+    $diamonds = (int)($temp["diamonds"] ?? 0);
+    $amount = (int)($temp["amount"] ?? $diamonds);
+
+    db_exec("INSERT INTO deposits (telegram_id, method, diamonds, amount, screenshot, status)
+             VALUES (:tg,'amazon',:d,:a,:s,'pending')", [
+      ":tg"=>$tg_id, ":d"=>$diamonds, ":a"=>$amount, ":s"=>$file_id
+    ]);
+    $dep = db_one("SELECT id FROM deposits WHERE telegram_id=:tg ORDER BY id DESC LIMIT 1", [":tg"=>$tg_id]);
+    $depId = (int)($dep["id"] ?? 0);
+
+    bot("sendMessage", ["chat_id"=>$tg_id, "text"=>"✅ Admin is checking your code.\nPlease wait for approval."]);
+
+    $cap =
+      "🆕 New Amazon Deposit Request\n\n"
+      . "👤 User: @{$username}\n"
+      . "🆔 ID: {$tg_id}\n"
+      . "💎 Diamonds: {$diamonds}\n"
+      . "💵 Amount: {$amount}\n"
+      . "🕒 Time: " . now_text() . "\n"
+      . "🔢 Deposit #: {$depId}";
+
+    foreach ($GLOBALS["ADMIN_IDS"] as $adminId) {
+      bot("sendPhoto", [
+        "chat_id" => $adminId,
+        "photo" => $file_id,
+        "caption" => $cap,
+        "reply_markup" => json_encode([
+          "inline_keyboard" => [
+            [
+              ["text"=>"✅ Accept", "callback_data"=>"dep_approve:{$depId}"],
+              ["text"=>"❌ Decline", "callback_data"=>"dep_decline:{$depId}"],
+            ]
+          ]
+        ], JSON_UNESCAPED_UNICODE)
+      ]);
+    }
+
+    set_state($tg_id, null, null);
+    http_response_code(200); echo "OK"; exit;
+  }
+
+  // UPI: screenshot
+  if ($state === "dep_upi_screenshot" && $photo) {
+    $file_id = end($photo)["file_id"];
+    $diamonds = (int)($temp["diamonds"] ?? 0);
+    $amount = (int)($temp["amount"] ?? $diamonds);
+
+    db_exec("INSERT INTO deposits (telegram_id, method, diamonds, amount, screenshot, status)
+             VALUES (:tg,'upi',:d,:a,:s,'pending')", [
+      ":tg"=>$tg_id, ":d"=>$diamonds, ":a"=>$amount, ":s"=>$file_id
+    ]);
+    $dep = db_one("SELECT id FROM deposits WHERE telegram_id=:tg ORDER BY id DESC LIMIT 1", [":tg"=>$tg_id]);
+    $depId = (int)($dep["id"] ?? 0);
+
+    bot("sendMessage", ["chat_id"=>$tg_id, "text"=>"✅ Admin is checking your payment.\nPlease wait for approval."]);
+
+    $cap =
+      "🆕 New UPI Deposit Request\n\n"
+      . "👤 User: @{$username}\n"
+      . "🆔 ID: {$tg_id}\n"
+      . "💎 Diamonds: {$diamonds}\n"
+      . "💵 Amount: {$amount}\n"
+      . "🕒 Time: " . now_text() . "\n"
+      . "🔢 Deposit #: {$depId}";
+
+    foreach ($GLOBALS["ADMIN_IDS"] as $adminId) {
+      bot("sendPhoto", [
+        "chat_id" => $adminId,
+        "photo" => $file_id,
+        "caption" => $cap,
+        "reply_markup" => json_encode([
+          "inline_keyboard" => [
+            [
+              ["text"=>"✅ Accept", "callback_data"=>"dep_approve:{$depId}"],
+              ["text"=>"❌ Decline", "callback_data"=>"dep_decline:{$depId}"],
+            ]
+          ]
         ], JSON_UNESCAPED_UNICODE)
       ]);
     }
