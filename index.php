@@ -56,14 +56,14 @@
  */
 
 // ===================== CONFIG =====================
-$BOT_TOKEN = "YOUR_BOT_TOKEN_HERE";
+$BOT_TOKEN = "8455750320:AAHB5NrVyKH_fTR7AFr4hZCadyK-O0k8Jxk";
 
 // Multiple admins supported:
-$ADMIN_IDS = [123456789]; // put your admin Telegram IDs here
+$ADMIN_IDS = [8135256584]; // put your admin Telegram IDs here
 
 // Supabase DATABASE_URL (preferred):
 // Example: postgresql://user:pass@host:5432/postgres
-$DATABASE_URL = "postgresql://postgres.xxxxx:YOURPASS@aws-1-xxxx.pooler.supabase.com:5432/postgres";
+$DATABASE_URL = "postgresql://postgres.dmwkpbyynjngjlpuyfog:RadheyRadhe@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres";
 
 // Minimum diamonds for deposits
 $MIN_DIAMONDS = 10;
