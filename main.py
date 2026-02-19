@@ -18,10 +18,10 @@ from telegram.ext import (
 )
 
 # ================= CONFIG =================
-BOT_TOKEN = "YOUR_BOT_TOKEN"
-DATABASE_URL = "YOUR_SUPABASE_DATABASE_URL"
+BOT_TOKEN = "8455750320:AAHB5NrVyKH_fTR7AFr4hZCadyK-O0k8Jxk"
+DATABASE_URL = "postgresql://postgres.dmwkpbyynjngjlpuyfog:RadheyRadhe@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres"
 WEBHOOK_URL = "https://YOUR_RENDER_URL.onrender.com/webhook"
-ADMIN_IDS = [123456789]
+ADMIN_IDS = [8135256584]
 # ==========================================
 
 app = FastAPI()
