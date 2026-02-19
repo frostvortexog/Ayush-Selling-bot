@@ -1,13 +1,13 @@
 <?php
 
 // ================= CONFIG =================
-$BOT_TOKEN = "YOUR_BOT_TOKEN";
-$ADMIN_ID = 123456789;
+$BOT_TOKEN = "8455750320:AAHB5NrVyKH_fTR7AFr4hZCadyK-O0k8Jxk";
+$ADMIN_ID = 8135256584;
 
-$DB_HOST = "localhost";
-$DB_USER = "root";
-$DB_PASS = "";
-$DB_NAME = "sellingbot";
+$DB_HOST = "aws-1-ap-southeast-2.pooler.supabase.com";
+$DB_USER = "postgres.dmwkpbyynjngjlpuyfog";
+$DB_PASS = "RadheyRadhe";
+$DB_NAME = "postgres";
 
 // ================= CONNECT =================
 $conn = new mysqli($DB_HOST,$DB_USER,$DB_PASS,$DB_NAME);
